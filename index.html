@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Routine — Yakin</title>
+<style>
+:root{
+--bg1:#f0f7ff;--bg2:#fbfcfd;--primary:#0b63b8;--muted:#6b7280;--card:#ffffff;--accent:#ff7043;
+font-family:"Noto Sans Bengali","Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#071126;display:flex;align-items:center;justify-content:center;padding:18px;}
+.app{width:100%;max-width:980px;border-radius:12px;overflow:hidden;box-shadow:0 12px 30px rgba(6,20,40,0.12);background:var(--card);}
+header{background:linear-gradient(90deg,var(--primary),#1e88e5);color:#fff;padding:14px 18px;display:flex;gap:12px;align-items:center;}
+.brand{font-weight:800;font-size:18px}
+.subtitle{font-size:13px;opacity:0.95}
+.layout{display:grid;grid-template-columns:1fr 360px;gap:16px;padding:16px;}
+@media(max-width:920px){.layout{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,#fff,#fcfdff);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(10,20,40,0.04);}
+h3{margin:0 0 10px 0;color:var(--primary);font-size:16px}
+.clock{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.time{font-size:30px;font-weight:700}
+.date{color:var(--muted);font-size:13px}
+.now{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px;border-radius:8px;border:1px solid rgba(6,20,40,0.04)}
+.now .left{flex:1}
+.now .title{font-weight:700}
+.now .desc{color:var(--muted);font-size:13px}
+.schedule{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:54vh;overflow:auto;padding-right:6px;}
+.session{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px;border-radius:8px;border:1px solid rgba(6,20,40,0.04);background:#fff;flex-direction:column}
+.session.active{background:linear-gradient(90deg, rgba(11,99,184,0.06), rgba(255,112,67,0.03));box-shadow:0 6px 14px rgba(6,20,40,0.04);transform:translateY(-2px)}
+.subject{font-weight:700}
+.times{color:var(--muted);font-size:13px}
+.small{font-size:13px;color:var(--muted)}
+.right-col{display:flex;flex-direction:column;gap:12px}
+.controls{display:flex;flex-direction:column;gap:8px}
+.btn{background:var(--primary);color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:700}
+.btn.secondary{background:transparent;color:var(--primary);border:1px solid rgba(11,99,184,0.12)}
+.row{display:flex;gap:8px}
+label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
+input[type="checkbox"]{width:18px;height:18px}
+.progress{height:10px;background:rgba(6,20,40,0.06);border-radius:8px;overflow:hidden}
+.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),#43a047);display:block}
+textarea{width:100%;margin-top:4px;border:1px solid #ccc;border-radius:6px;padding:6px;font-size:14px;resize:none}
+footer{padding:12px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid rgba(6,20,40,0.03)}
+.tiny{font-size:12px;color:var(--muted)}
+.tag{padding:6px 8px;border-radius:8px;color:#fff;font-weight:700;font-size:13px}
+.t1{background:#42a5f5}.t2{background:#1e88e5}.t3{background:#7e57c2}.t4{background:#ef5350}.t5{background:#26a69a}.t6{background:#ffb74d}.t7{background:#8d6e63}
+</style>
+</head>
+<body>
+<div class="app" role="application" aria-label="Study Routine for Yakin">
+<header>
+<div>
+<div class="brand">Study Routine — Yakin</div>
+<div class="subtitle tiny">৭টি সাবজেক্ট • স্মার্ট রিমাইন্ডার • প্রফেশনাল</div>
+</div>
+<div style="margin-left:auto" class="tiny">No fluff — সরাসরি প্রফেশনাল</div>
+</header>
+<div class="layout">
+<section class="panel" aria-live="polite">
+<h3>আজকের পরিকল্পনা</h3>
+<div class="clock">
+<div><div class="time" id="clock">--:--:--</div><div class="date" id="date">--</div></div>
+<div style="text-align:right"><div class="small">স্ট্যাটাস</div><div id="status" class="small">লোড হচ্ছে...</div></div>
+</div>
+<div class="now" id="nowBox">
+<div class="left">
+<div class="title" id="nowTitle">কোনো সেশন সক্রিয় নেই</div>
+<div class="desc" id="nowDesc">পরবর্তী সেশন দেখুন</div>
+</div>
+<div style="text-align:right"><div class="small">পরবর্তী:</div><div id="nextInfo" class="small">--</div></div>
+</div>
+<div class="schedule" id="scheduleList" aria-label="Schedule list"></div>
+<div style="margin-top:12px">
+<div class="small">আজকের অগ্রগতি</div>
+<div class="progress" aria-hidden="true"><span class="bar" id="progBar"></span></div>
+<div style="display:flex;justify-content:space-between;margin-top:6px">
+<div class="tiny" id="progText">0%</div>
+<div class="tiny" id="doneCount">0 / 0 সম্পন্ন</div>
+</div>
+</div>
+</section>
+<aside class="right-col">
+<div class="panel">
+<h3>সেটিংস — রিমাইন্ডার</h3>
+<div class="controls">
+<label><input type="checkbox" id="sound" checked> সাউন্ড চালু</label>
+<label><input type="checkbox" id="notif"> ব্রাউজার নোটিফিকেশন</label>
+<div class="row">
+<button class="btn" id="testBtn">টেস্ট রিমাইন্ডার</button>
+<button class="btn secondary" id="resetBtn">প্রগ্রেস রিসেট</button>
+</div>
+<p class="tiny">নোটিফিকেশন চালাতে ব্রাউজার অনুমতি দিন।</p>
+</div>
+</div>
+<div class="panel">
+<h3>অ্যাকশন</h3>
+<div class="row">
+<button class="btn" id="startDay">আজ শুরু করো</button>
+<button class="btn secondary" id="markAllDone">আজ শেষ মার্ক করো</button>
+</div>
+<p class="tiny" style="margin-top:8px">কিবোর্ড শর্টকাট: <strong>m</strong>=সাউন্ড টগল, <strong>n</strong>=নোটিফ টগল</p>
+</div>
+</aside>
+</div>
+<footer>© 2025 — Study Routine • Designed for Yakin • প্রফেশনাল এক ফাইল সমাধান</footer>
+</div>
+
+<audio id="chime"><source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAA" /></audio>
+<audio id="beep"><source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" /></audio>
+
+<script>
+(() => {
+const schedule=[
+{id:'s1',subject:'তাফসীর ও উসুল তাফসীর',start:'06:30',end:'07:30',tag:'t1',note:'গভীর মনোযোগে পাঠ'},
+{id:'s2',subject:'হাদীস (প্রথম পত্র)',start:'08:00',end:'09:00',tag:'t2',note:'মুখস্থ ও বিশ্লেষণ'},
+{id:'s3',subject:'আল-আকিদাতুল ইসলামিয়া',start:'09:30',end:'10:30',tag:'t3',note:'তত্ত্ব ও অনুশীলন'},
+{id:'s4',subject:'বাংলা',start:'11:00',end:'12:00',tag:'t4',note:'লেখা ও রিডিং'},
+{id:'s5',subject:'দিরাসাতুল হাদীস — প্রথম পত্র',start:'14:00',end:'15:00',tag:'t5',note:'নোট রিভিউ'},
+{id:'s6',subject:'দিরাসাতুল হাদীস — দ্বিতীয় পত্র',start:'16:00',end:'17:00',tag:'t6',note:'প্রশ্ন ও তালিকা'},
+{id:'s7',subject:'দিরাসাতুল হাদীস — তৃতীয় পত্র',start:'19:00',end:'20:00',tag:'t7',note:'সারাংশ ও রিভিশন'}
+];
+const clockEl=document.getElementById('clock'),dateEl=document.getElementById('date');
+const statusEl=document.getElementById('status'),nowTitle=document.getElementById('nowTitle'),nowDesc=document.getElementById('nowDesc');
+const nextInfo=document.getElementById('nextInfo'),scheduleList=document.getElementById('scheduleList');
+const progBar=document.getElementById('progBar'),progText=document.getElementById('progText'),doneCount=document.getElementById('doneCount');
+const soundChk=document.getElementById('sound'),notifChk=document.getElementById('notif');
+const testBtn=document.getElementById('testBtn'),resetBtn=document.getElementById('resetBtn');
+const startDayBtn=document.getElementById('startDay'),markAllBtn=document.getElementById('markAllDone');
+const chime=document.getElementById('chime'),beep=document.getElementById('beep');
+const STORAGE='yakin_subject_progress_v2';
+
+let progress=(()=>{
+try{
+const raw=localStorage.getItem(STORAGE);
+if(!raw)return{date:todayKey(),done:[]};
+const parsed=JSON.parse(raw);
+if(parsed.date!==todayKey())return{date:todayKey(),done:[]};
+return parsed;
+}catch(e){return{date:todayKey(),done:[]}}
+})();
+function todayKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
+function hhmmToDate(hm){const[hh,mm]=hm.split(':').map(Number);const d=new Date();d.setHours(hh,mm,0,0);return d}
+function fmtHM(d){return d.toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'})}
+function renderList(){
+scheduleList.innerHTML='';
+schedule.forEach(s=>{
+const el=document.createElement('div');
+el.className='session';
+el.id='row-'+s.id;
+el.innerHTML=`<div><span class="tag ${s.tag}">${s.tag.slice(1)}</span> <strong>${s.subject}</strong><div class="small">${s.note}</div></div>
+<textarea placeholder="নোট এখানে লিখুন..." data-id="${s.id}">${loadNote(s.id)}</textarea>
+<div style="text-align:right"><div class="times">${s.start} — ${s.end}</div><div class="small">${progress.done.includes(s.id)?'✅ সম্পন্ন':''}</div></div>`;
+el.addEventListener('click',e=>{
+if(e.target.tagName!=='TEXTAREA' && confirm(`${s.subject} সম্পন্ন হিসেবে চিহ্নিত করবেন?`)) markDone(s.id);
+});
+scheduleList.appendChild(el);
+el.querySelector('textarea').addEventListener('input',e=>saveNote(s.id,e.target.value));
+});
+updateProgressUI();
+}
+function loadNote(id){return localStorage.getItem('note_'+id)||''}
+function saveNote(id,val){localStorage.setItem('note_'+id,val)}
+function updateProgressUI(){
+const total=schedule.length;
+const done=progress.done.length;
+const pct=Math.round((done/total)*100);
+progBar.style.width=pct+'%';
+progText.textContent=pct+'%';
+doneCount.textContent=`${done} / ${total} সম্পন্ন`;
+schedule.forEach(s=>{
+const el=document.getElementById('row-'+s.id);
+if(el)el.classList.toggle('active',isActiveSession(s));
+if(progress.done.includes(s.id))el.style.opacity=0.6;else el.style.opacity=1;
+});
+}
+function saveProgress(){localStorage.setItem(STORAGE,JSON.stringify(progress))}
+function markDone(id){if(!progress.done.includes(id)){progress.done.push(id);saveProgress();updateProgressUI()}}
+function resetProgress(){progress={date:todayKey(),done:[]};saveProgress();updateProgressUI();alert('প্রগ্রেস রিসেট করা হয়েছে।')}
+function getNowNext(now){
+let current=null,next=null;
+for(let i=0;i<schedule.length;i++){
+const s=schedule[i];
+let start=hhmmToDate(s.start),end=hhmmToDate(s.end);
+if(end<=start)end.setDate(end.getDate()+1);
+if(now>=start && now<end)current={...s,start,end};
+if(now<start && !next)next={...s,start,end};
+}
+if(!next){const s=schedule[0];const st=hhmmToDate(s.start);st.setDate(st.getDate()+1);next={...s,start:st,end:hhmmToDate(s.end)};next.end.setDate(next.end.getDate()+1)}
+return{current,next};
+}
+function isActiveSession(s){const now=new Date();const start=hhmmToDate(s.start),end=hhmmToDate(s.end);if(end<=start)end.setDate(end.getDate()+1);return now>=start && now<end}
+function play(kind='chime'){if(!soundChk.checked)return;try{if(kind==='chime'){chime.currentTime=0;chime.play().catch(()=>{});}else{beep.currentTime=0;beep.play().catch(()=>{})}}catch(e){}}
+function notify(title,body){if(!notifChk.checked)return;if(!("Notification"in window))return;if(Notification.permission==='granted'){try{new Notification(title,{body});}catch(e){}}else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')try{new Notification(title,{body});}catch(e){}})}}
+let lastStartNotified=null;
+function tick(){
+const now=new Date();
+clockEl.textContent=now.toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+dateEl.textContent=now.toLocaleDateString('bn-BD',{weekday:'long',year:'numeric',month:'short',day:'numeric'});
+if(progress.date!==todayKey()){progress={date:todayKey(),done:[]};saveProgress();}
+const {current,next}=getNowNext(now);
+if(current){
+statusEl.textContent='সক্রিয়';
+nowTitle.textContent=current.subject;
+nowDesc.textContent=`${current.start} — ${current.end} · ${current.note}`;
+document.getElementById('row-'+current.id).classList.add('active');
+const startDelta=Math.abs((now-current.start)/1000);
+if(startDelta<8 && lastStartNotified!==current.id){play('chime');notify('সেশন শুরু: '+current.subject,`${current.start} — ${current.end}`);lastStartNotified=current.id;}
+if(now>=current.end && !progress.done.includes(current.id))markDone(current.id);
+}else{statusEl.textContent='বিরতি';nowTitle.textContent='কোনো সেশন সক্রিয় নেই';nowDesc.textContent='পরবর্তী সেশন দেখুন';}
+if(next){nextInfo.textContent=`${next.subject} — শুরু ${fmtHM(next.start)}`;
+if((next.start-now)<=60000&&(next.start-now)>0){const key='imminent_'+next.id;if(!sessionStorage.getItem(key)){play('beep');notify('শীঘ্রই শুরু: '+next.subject,`শুরু: ${fmtHM(next.start)}`);sessionStorage.setItem(key,'1')}}}else nextInfo.textContent='--';
+updateProgressUI();
+}
+setInterval(tick,1000);
+function init(){renderList();
+testBtn.addEventListener('click',()=>{play('chime');notify('টেস্ট রিমাইন্ডার','সাউন্ড ও নোটিফিকেশন পরীক্ষা');});
+resetBtn.addEventListener('click',()=>{if(confirm('আজকের প্রগ্রেস রিসেট করবেন?'))resetProgress();});
+startDayBtn.addEventListener('click',()=>{lastStartNotified=null;alert('আজকের রুটিন সক্রিয় করা হয়েছে।');});
+markAllBtn.addEventListener('click',()=>{if(confirm('আজকের সব সেশন সম্পন্ন হিসেবে মার্ক করবেন?')){schedule.forEach(s=>markDone(s.id));}});
+if(Notification.permission!=='granted')Notification.requestPermission();
+tick();}
+init();
+})();
+</script>
+</body>
+</html>
